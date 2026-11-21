@@ -1,0 +1,16 @@
+{
+  "identifier": "character_lorebooks",
+  "version": "1.0.0",
+  "name": "Character Lorebooks",
+  "author": "Gehihi",
+  "github": "https://github.com/tminh159/character_lorebooks",
+  "description": "Mirrors the Character Editor Advanced tab World Books and Embedded Lorebook controls inside the Lorebook drawer.",
+  "permissions": [
+    "characters",
+    "world_books",
+    "chats"
+  ],
+  "entry_backend": "dist/backend.js",
+  "entry_frontend": "dist/frontend.js",
+  "minimum_lumiverse_version": "1.2.0"
+}
