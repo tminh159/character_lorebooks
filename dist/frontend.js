@@ -1,4 +1,4 @@
-// src/shared.ts
+// character_lorebooks/repo/src/shared.ts
 function isRecord(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -378,7 +378,7 @@ function toWorldBookSummary(wb) {
   };
 }
 
-// src/styles.ts
+// character_lorebooks/repo/src/styles.ts
 var STYLES = `
 .clb-section {
   --clb-accent: var(--lumiverse-warning, #f5a623);
@@ -1129,7 +1129,7 @@ var STYLES = `
 }
 `;
 
-// src/frontend.ts
+// character_lorebooks/repo/src/frontend.ts
 var SECTION_ATTR = "data-char-lorebooks-section";
 var POSITION_LABELS = {
   0: "Before Char",
@@ -1243,6 +1243,7 @@ function setup(ctx) {
   ctx.deferReady();
   let disposed = false;
   let requestCounter = 0;
+  let latestStateRequestId = null;
   let mobileCollapsed = true;
   let lastIsMobile = null;
   let state = null;
@@ -1374,6 +1375,8 @@ function setup(ctx) {
     if (disposed)
       return;
     const { chatId, characterId } = getActiveIds();
+    const requestId = nextRequestId();
+    latestStateRequestId = requestId;
     if (fallbackTimer)
       clearTimeout(fallbackTimer);
     fallbackTimer = setTimeout(() => {
@@ -1383,7 +1386,7 @@ function setup(ctx) {
     }, 650);
     sendToBackend({
       type: "get_state",
-      requestId: nextRequestId(),
+      requestId,
       chatId,
       characterId
     });
@@ -2190,6 +2193,16 @@ function setup(ctx) {
     }
     const msg = rawPayload;
     if (msg.type === "state") {
+      if (msg.requestId && latestStateRequestId && msg.requestId !== latestStateRequestId) {
+        return;
+      }
+      if (!msg.requestId) {
+        const active = getActiveIds();
+        if ((msg.state.chatId ?? null) !== active.chatId) {
+          scheduleRefresh(20);
+          return;
+        }
+      }
       if (fallbackTimer) {
         clearTimeout(fallbackTimer);
         fallbackTimer = null;

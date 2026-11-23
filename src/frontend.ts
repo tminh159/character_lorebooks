@@ -169,6 +169,7 @@ export function setup(ctx: SpindleFrontendContext): SpindleFrontendTeardown {
 
   let disposed = false;
   let requestCounter = 0;
+  let latestStateRequestId: string | null = null;
   let mobileCollapsed = true;
   let lastIsMobile: boolean | null = null;
   let state: CharacterLorebooksState | null = null;
@@ -311,6 +312,8 @@ export function setup(ctx: SpindleFrontendContext): SpindleFrontendTeardown {
   function requestState(): void {
     if (disposed) return;
     const { chatId, characterId } = getActiveIds();
+    const requestId = nextRequestId();
+    latestStateRequestId = requestId;
     if (fallbackTimer) clearTimeout(fallbackTimer);
     fallbackTimer = setTimeout(() => {
       if (!disposed && !state) {
@@ -320,7 +323,7 @@ export function setup(ctx: SpindleFrontendContext): SpindleFrontendTeardown {
 
     sendToBackend({
       type: "get_state",
-      requestId: nextRequestId(),
+      requestId,
       chatId,
       characterId,
     });
@@ -1317,6 +1320,16 @@ export function setup(ctx: SpindleFrontendContext): SpindleFrontendTeardown {
       const msg = rawPayload as BackendToFrontendMessage;
 
       if (msg.type === "state") {
+        if (msg.requestId && latestStateRequestId && msg.requestId !== latestStateRequestId) {
+          return;
+        }
+        if (!msg.requestId) {
+          const active = getActiveIds();
+          if ((msg.state.chatId ?? null) !== active.chatId) {
+            scheduleRefresh(20);
+            return;
+          }
+        }
         if (fallbackTimer) {
           clearTimeout(fallbackTimer);
           fallbackTimer = null;

@@ -118,9 +118,11 @@ async function buildState(
 
   if (permissions.chats) {
     try {
-      chat = chatId
-        ? await spindle.chats.get(chatId, userId)
-        : await spindle.chats.getActive(userId);
+      if (chatId) {
+        chat = await spindle.chats.get(chatId, userId);
+      } else if (requestedChatId === undefined) {
+        chat = await spindle.chats.getActive(userId);
+      }
       if (chat) {
         chatId = chat.id;
         if (!activeCharacterId) {

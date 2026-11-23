@@ -1,5 +1,5 @@
 // @bun
-// src/shared.ts
+// character_lorebooks/repo/src/shared.ts
 function isRecord(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -379,7 +379,7 @@ function toWorldBookSummary(wb) {
   };
 }
 
-// src/backend.ts
+// character_lorebooks/repo/src/backend.ts
 var trackedSessions = new Map;
 function getPermissionStatus() {
   const characters = spindle.permissions.has("characters");
@@ -462,7 +462,11 @@ async function buildState(userId, requestedChatId, requestedCharacterId) {
   let chat = null;
   if (permissions.chats) {
     try {
-      chat = chatId ? await spindle.chats.get(chatId, userId) : await spindle.chats.getActive(userId);
+      if (chatId) {
+        chat = await spindle.chats.get(chatId, userId);
+      } else if (requestedChatId === undefined) {
+        chat = await spindle.chats.getActive(userId);
+      }
       if (chat) {
         chatId = chat.id;
         if (!activeCharacterId) {
